@@ -126,11 +126,16 @@ function play(guild, song) {
 
     serverQueue.connection.subscribe(player);
 
+    // Répondre avec le titre de la musique jouée
+    serverQueue.textChannel.send(`Joue maintenant : ${song.title}`);
+    console.log(`Joue maintenant : ${song.title}`)
+
     player.on('finish', () => {
         serverQueue.songs.shift();
         play(guild, serverQueue.songs[0]);
     });
 }
+
 
 
 client.login(process.env.DISCORD_TOKEN);
