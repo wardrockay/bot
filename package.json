@@ -1,0 +1,19 @@
+{
+  "name": "bot",
+  "version": "1.0.0",
+  "description": "bot Discord qui offre des fonctionnalités de lecture de musique à partir d'un lien youtube, de modération et d'autres fonctionnalités supplémentaires.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@discordjs/voice": "^0.16.0",
+    "discord-interactions": "^3.4.0",
+    "discord.js": "^14.13.0",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^2.7.0",
+    "ytdl-core": "^4.11.5"
+  }
+}
