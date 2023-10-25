@@ -61,6 +61,7 @@ client.on('interactionCreate', async (interaction) => {
                 });
                 queueConstruct.connection = connection;
                 play(interaction.guild, queueConstruct.songs[0]);
+                interaction.reply(`Joue maintenant : ${song.title}`);
             } else {
                 serverQueue.songs.push(song);
                 //console.log(serverQueue.songs)
@@ -76,18 +77,24 @@ client.on('interactionCreate', async (interaction) => {
         if (!serverQueue || !serverQueue.songs.length) return interaction.reply('Il n\'y a pas de chanson à sauter.');
         if (serverQueue.player) {
             serverQueue.player.stop();
-            interaction.reply('Je joue la piste suivante.');
+            interaction.reply("Je joue la piste suivante.");
+            console.log('Je joue la piste suivante.');
         } else {
             return interaction.reply('Il n\'y a actuellement aucune musique en cours de lecture.');
         }
     }
     
     
-     else if (interaction.commandName === 'stop') {
+    else if (interaction.commandName === 'stop') {
         if (!interaction.member.voice.channel) return interaction.reply('Vous devez être dans un canal vocal pour arrêter la musique.');
         serverQueue.songs = [];
-        serverQueue.connection.dispatcher.end();
-    } else if (interaction.commandName === 'ban') {
+        if (serverQueue.player) {
+            serverQueue.player.stop();
+            interaction.reply("j'ai arreté la musique.")
+            console.log("J'ai arreté la musique")
+        }
+    }
+     else if (interaction.commandName === 'ban') {
         const user = interaction.options.getUser('utilisateur');
         if (interaction.member.permissions.has('BAN_MEMBERS')) {
             interaction.guild.members.ban(user);
@@ -132,7 +139,7 @@ function play(guild, song) {
         serverQueue.player.on('stateChange', (oldState, newState) => {
             if (newState.status === 'idle' && oldState.status === 'playing') {
                 serverQueue.songs.shift();
-                play(guild, serverQueue.songs[0]);
+                play(guild, serverQueue.songs[0]);                    
             }
         });
         serverQueue.player.on('error', error => {
@@ -142,10 +149,9 @@ function play(guild, song) {
 
     serverQueue.player.play(resource);
     serverQueue.connection.subscribe(serverQueue.player);
+  
 
-    // Répondre avec le titre de la musique jouée
-    serverQueue.textChannel.send(`Joue maintenant : ${song.title}`);
-    console.log(`Joue maintenant : ${song.title}`);
+
 }
 
 
