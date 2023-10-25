@@ -39,10 +39,10 @@ client.on('interactionCreate', async (interaction) => {
             console.log("--------------------------------------------------------------")
             console.log(args[0])
             console.log("---------------------------------------------------------------")
-            const songInfo = await ytdl.getInfo(args[0]);            
+            const songInfo = await ytdl.getInfo(args[0]);   
             const song = {
-                title: "songInfo.title",
-                url: args[0]
+                title: songInfo.videoDetails.title,
+                url: songInfo.videoDetails.video_url,
             };
 
             if (!serverQueue) {
@@ -116,7 +116,7 @@ function play(guild, song) {
         queue.delete(guild.id);
         return;
     }
-
+    const player = createAudioPlayer();
     player.on('error', error => {
         console.error('Erreur avec le AudioPlayer:', error);
     });
