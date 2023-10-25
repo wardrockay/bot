@@ -36,9 +36,6 @@ client.on('interactionCreate', async (interaction) => {
         }
         
         try {
-            console.log("--------------------------------------------------------------")
-            console.log(args[0])
-            console.log("---------------------------------------------------------------")
             const songInfo = await ytdl.getInfo(args[0]);   
             const song = {
                 title: songInfo.videoDetails.title,
@@ -66,7 +63,9 @@ client.on('interactionCreate', async (interaction) => {
                 play(interaction.guild, queueConstruct.songs[0]);
             } else {
                 serverQueue.songs.push(song);
+                //console.log(serverQueue.songs)
                 return interaction.reply(`${song.title} a été ajouté à la file d'attente!`);
+                
             }
         } catch (error) {
             console.error("Erreur lors de la récupération des informations de la vidéo :", error);
@@ -74,9 +73,17 @@ client.on('interactionCreate', async (interaction) => {
         }
     }  else if (interaction.commandName === 'skip') {
         if (!interaction.member.voice.channel) return interaction.reply('Vous devez être dans un canal vocal pour sauter la musique.');
-        if (!serverQueue) return interaction.reply('Il n\'y a pas de chanson à sauter.');
-        serverQueue.connection.dispatcher.end();
-    } else if (interaction.commandName === 'stop') {
+        if (!serverQueue || !serverQueue.songs.length) return interaction.reply('Il n\'y a pas de chanson à sauter.');
+        if (serverQueue.player) {
+            serverQueue.player.stop();
+            interaction.reply('Je joue la piste suivante.');
+        } else {
+            return interaction.reply('Il n\'y a actuellement aucune musique en cours de lecture.');
+        }
+    }
+    
+    
+     else if (interaction.commandName === 'stop') {
         if (!interaction.member.voice.channel) return interaction.reply('Vous devez être dans un canal vocal pour arrêter la musique.');
         serverQueue.songs = [];
         serverQueue.connection.dispatcher.end();
@@ -116,25 +123,31 @@ function play(guild, song) {
         queue.delete(guild.id);
         return;
     }
-    const player = createAudioPlayer();
-    player.on('error', error => {
-        console.error('Erreur avec le AudioPlayer:', error);
-    });
+
     const stream = ytdl(song.url, { filter: 'audioonly', quality: 'highestaudio', format: 'opus' });
     const resource = createAudioResource(stream);
-    player.play(resource);
 
-    serverQueue.connection.subscribe(player);
+    if (!serverQueue.player) {
+        serverQueue.player = createAudioPlayer();
+        serverQueue.player.on('stateChange', (oldState, newState) => {
+            if (newState.status === 'idle' && oldState.status === 'playing') {
+                serverQueue.songs.shift();
+                play(guild, serverQueue.songs[0]);
+            }
+        });
+        serverQueue.player.on('error', error => {
+            console.error('Erreur avec le AudioPlayer:', error);
+        });
+    }
+
+    serverQueue.player.play(resource);
+    serverQueue.connection.subscribe(serverQueue.player);
 
     // Répondre avec le titre de la musique jouée
     serverQueue.textChannel.send(`Joue maintenant : ${song.title}`);
-    console.log(`Joue maintenant : ${song.title}`)
-
-    player.on('finish', () => {
-        serverQueue.songs.shift();
-        play(guild, serverQueue.songs[0]);
-    });
+    console.log(`Joue maintenant : ${song.title}`);
 }
+
 
 
 
